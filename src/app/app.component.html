@@ -1,1 +1,27 @@
-<p>app-works!</p>
+<div fxLayout="row" fxLayoutAlign="center start">
+  <div
+    fxFlex="35"
+    fxLayout="column"
+    fxLayoutAlign="start stretch"
+    fxLayoutGap="16px"
+    class="main-div mat-elevation-z1"
+  >
+    <h1>RxJS Operators</h1>
+    <div></div>
+    <div fxLayout="row" fxLayoutAlign="start start" fxLayoutGap="16px">
+      <mat-form-field fxFlex="670">
+        <mat-label>Operator</mat-label>
+        <mat-select [(ngModel)]="selectedOperator">
+          <mat-option *ngFor="let operator of operators" [value]="operator">
+            {{ operator }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field fxFlex>
+        <mat-label>Value</mat-label>
+        <input type="number" matInput [(ngModel)]="nextValue" />
+      </mat-form-field>
+    </div>
+    <button mat-flat-button color="primary" (click)="onNext()">NEXT</button>
+  </div>
+</div>
