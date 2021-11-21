@@ -17,6 +17,7 @@ import {
   map,
   mergeMap,
   pluck,
+  skip,
   switchMap,
   take,
   tap,
@@ -34,6 +35,7 @@ enum RxJSOperator {
   PLUCK = 'pluck(keyOfObject)',
   TAP = 'tap(fn)',
   TAKE = 'take(number)',
+  SKIP = 'skip(number)',
   CATCH_ERROR = 'catchError(fn)',
   FINALIZE = 'finalize(fn)',
   WITH_LATEST_FROM = 'withLatesFrom(observable$)',
@@ -89,6 +91,7 @@ export class AppComponent {
         mergeMap(() => throwError('simulated error!')),
         catchError((error) => of(error))
       ),
+      [RxJSOperator.SKIP]: skip(3),
     };
   }
 
