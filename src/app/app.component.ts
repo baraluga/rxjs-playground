@@ -1,11 +1,14 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { Observable, Subject } from 'rxjs';
-import { filter, map } from 'rxjs/operators';
+import { Observable, OperatorFunction, Subject } from 'rxjs';
+import { debounceTime, filter, map } from 'rxjs/operators';
 
 enum RxJSOperator {
   MAP = 'map',
   FILTER = 'filter',
+  DEBOUNCE_TIME = 'debounceTime',
 }
+
+type ValidOperatorFn = OperatorFunction<number | undefined, number | undefined>;
 
 @Component({
   selector: 'app-root',
@@ -15,7 +18,6 @@ enum RxJSOperator {
 })
 export class AppComponent {
   private before = new Subject<number>();
-  private after = new Subject<number>();
 
   selectedOperator: RxJSOperator = this.operators[0];
   nextValue = 1;
@@ -24,31 +26,41 @@ export class AppComponent {
     return Object.values(RxJSOperator);
   }
 
-  constructor() {
-    this.subscribeToAfterForLogging();
+  get operatorImpl(): Record<RxJSOperator, ValidOperatorFn> {
+    return {
+      [RxJSOperator.MAP]: map((num) => num! * 1.23),
+      [RxJSOperator.FILTER]: filter((num) => num! < 0),
+      [RxJSOperator.DEBOUNCE_TIME]: debounceTime(1000),
+    };
+  }
 
-    this.subscribeForMapOperator();
-    this.subscribeForFilterOperator();
+  constructor() {
+    this.subscribeToAllImplOperators();
   }
 
   onNext(): void {
     this.before.next(this.nextValue);
   }
 
-  private subscribeToAfterForLogging(): void {
-    this.after.subscribe((after) => this.log(after));
+  private subscribeToAllImplOperators(): void {
+    Object.entries(this.operatorImpl).forEach(([operator, fn]) =>
+      this.subscribeToOperatorImplForLogging(operator as RxJSOperator, fn)
+    );
   }
 
-  private subscribeForFilterOperator(): void {
-    this.filterOnlyMatchingOperator(RxJSOperator.FILTER)
-      .pipe(filter((num) => num > 1))
-      .subscribe((num) => this.after.next(num));
+  private subscribeToOperatorImplForLogging(
+    operator: RxJSOperator,
+    fn: ValidOperatorFn
+  ): void {
+    this.filterOnlyMatchingOperator(operator)
+      .pipe(fn)
+      .subscribe((num) => this.log(num!));
   }
 
-  private subscribeForMapOperator(): void {
-    this.filterOnlyMatchingOperator(RxJSOperator.MAP)
-      .pipe(map((num: number) => num * 5))
-      .subscribe((num) => this.after.next(num));
+  private filterOnlyMatchingOperator(
+    operator: RxJSOperator
+  ): Observable<number> {
+    return this.before.pipe(filter(() => this.selectedOperator === operator));
   }
 
   private log(value: number): void {
@@ -57,11 +69,5 @@ export class AppComponent {
         this.nextValue
       }\nAFTER: ${value}\ntimestamp: ${new Date()}`
     );
-  }
-
-  private filterOnlyMatchingOperator(
-    operator: RxJSOperator
-  ): Observable<number> {
-    return this.before.pipe(filter(() => this.selectedOperator === operator));
   }
 }
